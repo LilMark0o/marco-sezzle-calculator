@@ -4,8 +4,8 @@ Full-stack calculator: a Go REST API and a React + TypeScript frontend (shadcn/u
 
 ## Live demo
 
-- **Frontend:** https://front-production-b11d.up.railway.app/
-- **Backend (API only, no root page):** https://back-production-af87.up.railway.app/
+- **Frontend:** https://sezzle-marco-test.up.railway.app/
+- **Backend (API only, no root page):** https://sezzle-marco-test-back.up.railway.app/
 
 A companion doc with architecture diagrams, request-flow diagrams, and the reasoning behind each design decision: [**Calculator Build Log**](https://claude.ai/code/artifact/8b35f5e4-763f-4ad4-9ff7-5ea428113308).
 
