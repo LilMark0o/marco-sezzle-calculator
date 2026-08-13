@@ -120,7 +120,3 @@ Two services, each pointed at its subfolder as the root directory:
 - `frontend`: builds `frontend/Dockerfile` with build arg `VITE_API_URL` set to the deployed backend's URL (read at **build time** by Vite — changing it needs a fresh build/redeploy, not just a restart).
 
 Both services need their own generated domain (Settings → Networking → Generate Domain), matched to the port each one actually listens on: `8080` for the backend, `80` for the frontend (nginx's default — not the backend's port).
-
-## AI tooling used
-
-Built with Claude Code (Anthropic), using its `superpowers` skill set for process: brainstorming the architecture and API shape interactively (one clarifying question at a time — repo/deploy shape, operation scope, endpoint design, backend layering depth, testing stack, history feature, CI), writing a committed design spec and implementation plan from that conversation, then executing the plan test-first via two parallel subagents (one for the Go backend, one for the React frontend) inside an isolated git worktree, each task ending in its own commit with the test written and failing before the implementation. Railway deployment (service setup, env vars, and diagnosing a CORS/build-arg misconfiguration post-deploy) was also driven through the Railway CLI in the same session.
