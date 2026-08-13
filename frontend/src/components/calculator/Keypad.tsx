@@ -18,7 +18,7 @@ const BASIC_OPS: { op: Operation; label: string }[] = [
 ];
 
 const ADVANCED_OPS: { op: Operation; label: string }[] = [
-  { op: "power", label: "^" },
+  { op: "power", label: "Aᵇ" },
   { op: "sqrt", label: "√" },
   { op: "percentage", label: "%" },
 ];
