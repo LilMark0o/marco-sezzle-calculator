@@ -2,6 +2,13 @@
 
 Full-stack calculator: a Go REST API and a React + TypeScript frontend (shadcn/ui), built as a take-home assignment.
 
+## Live demo
+
+- **Frontend:** https://front-production-b11d.up.railway.app/
+- **Backend (API only, no root page):** https://back-production-af87.up.railway.app/
+
+A companion doc with architecture diagrams, request-flow diagrams, and the reasoning behind each design decision: [**Calculator Build Log**](https://claude.ai/code/artifact/8b35f5e4-763f-4ad4-9ff7-5ea428113308).
+
 ## Setup
 
 **Backend** (Go 1.23+):
@@ -29,6 +36,48 @@ Runs on `:5173` by default. Env var: `VITE_API_URL` (default `http://localhost:8
 cd backend && go vet ./... && go test ./... -v -cover
 cd frontend && npm run lint && npm run build && npm run test:coverage
 ```
+
+## Architecture
+
+Two independent services from one repo — the frontend never talks to the backend except over HTTP, so each deploys and scales on its own.
+
+```mermaid
+flowchart LR
+  REPO["GitHub\nmarco-sezzle-calculator"]
+
+  subgraph RAILWAY["Railway project"]
+    direction LR
+    FRONT["Front service\nnginx serving Vite build\nroot: /frontend"]
+    BACK["Back service\nGo binary\nroot: /backend"]
+  end
+
+  USER(["Browser"]) -- HTTPS --> FRONT
+  FRONT -- "fetch POST /api/*\n(CORS: FRONTEND_URL)" --> BACK
+  REPO -- "push to main\nauto-deploy" --> FRONT
+  REPO -- "push to main\nauto-deploy" --> BACK
+```
+
+Request flow for a single operation — same path for every endpoint, basic or advanced:
+
+```mermaid
+sequenceDiagram
+  participant UI as Keypad (React)
+  participant Hook as useCalculator()
+  participant API as lib/api.ts
+  participant H as MakeHandler[T]
+  participant Calc as calculator.Add()
+
+  UI->>Hook: calculate()
+  Hook->>API: add(a, b)
+  API->>H: POST /api/add  {"a":5,"b":3}
+  H->>Calc: Add(req)
+  Calc-->>H: (8, nil)
+  H-->>API: 200  {"result":8}
+  API-->>Hook: 8
+  Hook-->>UI: update result + push history entry
+```
+
+On a domain error (e.g. divide by zero), `Calc` returns an error instead of a value; the handler responds `422` with `{"error": "..."}` and the hook renders that message instead of a result.
 
 ## API examples
 
@@ -67,9 +116,11 @@ Status codes: `400` for a malformed request body, `422` for a well-formed reques
 ## Deployment (Railway)
 
 Two services, each pointed at its subfolder as the root directory:
-- `backend`: builds `backend/Dockerfile`. Set `FRONTEND_URL` to the deployed frontend's URL.
-- `frontend`: builds `frontend/Dockerfile` with build arg `VITE_API_URL` set to the deployed backend's URL.
+- `backend`: builds `backend/Dockerfile`. Set `FRONTEND_URL` to the deployed frontend's URL (read at **runtime** — changing it only needs a restart).
+- `frontend`: builds `frontend/Dockerfile` with build arg `VITE_API_URL` set to the deployed backend's URL (read at **build time** by Vite — changing it needs a fresh build/redeploy, not just a restart).
+
+Both services need their own generated domain (Settings → Networking → Generate Domain), matched to the port each one actually listens on: `8080` for the backend, `80` for the frontend (nginx's default — not the backend's port).
 
 ## AI tooling used
 
-Built with Claude Code (Anthropic), using its `superpowers` skill set for process: brainstorming the architecture and API shape interactively (one clarifying question at a time — repo/deploy shape, operation scope, endpoint design, backend layering depth, testing stack, history feature, CI), writing a committed design spec and implementation plan from that conversation, then executing the plan test-first via two parallel subagents (one for the Go backend, one for the React frontend) inside an isolated git worktree, each task ending in its own commit with the test written and failing before the implementation.
+Built with Claude Code (Anthropic), using its `superpowers` skill set for process: brainstorming the architecture and API shape interactively (one clarifying question at a time — repo/deploy shape, operation scope, endpoint design, backend layering depth, testing stack, history feature, CI), writing a committed design spec and implementation plan from that conversation, then executing the plan test-first via two parallel subagents (one for the Go backend, one for the React frontend) inside an isolated git worktree, each task ending in its own commit with the test written and failing before the implementation. Railway deployment (service setup, env vars, and diagnosing a CORS/build-arg misconfiguration post-deploy) was also driven through the Railway CLI in the same session.
