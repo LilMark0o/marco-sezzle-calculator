@@ -13,7 +13,7 @@ go run ./cmd/server
 
 Runs on `:8080` by default. Env vars: `PORT` (default `8080`), `FRONTEND_URL` (default `http://localhost:5173`, used for CORS).
 
-**Frontend** (Node 20+):
+**Frontend** (Node 22+ — jsdom's bundled undici needs the newer `webidl` internals):
 
 ```bash
 cd frontend
