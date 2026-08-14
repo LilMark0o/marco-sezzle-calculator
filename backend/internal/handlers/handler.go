@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"reflect"
 
@@ -24,7 +25,7 @@ func MakeHandler[T any](fn func(T) (float64, error)) http.HandlerFunc {
 			return
 		}
 		var extra json.RawMessage
-		if err := decoder.Decode(&extra); err != json.EOF {
+		if err := decoder.Decode(&extra); err != io.EOF {
 			httputil.WriteError(w, http.StatusBadRequest, "request body must contain exactly one JSON object")
 			return
 		}
