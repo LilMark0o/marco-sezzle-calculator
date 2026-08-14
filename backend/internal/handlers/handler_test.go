@@ -60,3 +60,51 @@ func TestMakeHandler_DomainError(t *testing.T) {
 		t.Errorf("error = %q, want %q", resp["error"], "division by zero")
 	}
 }
+
+func TestMakeHandler_RejectsUnknownFields(t *testing.T) {
+	handler := MakeHandler(calculator.Add)
+	req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewBufferString(`{"a": 2, "b": 3, "extra": 4}`))
+	rec := httptest.NewRecorder()
+
+	handler(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestMakeHandler_RejectsMissingFields(t *testing.T) {
+	handler := MakeHandler(calculator.Add)
+	req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewBufferString(`{"a": 2}`))
+	rec := httptest.NewRecorder()
+
+	handler(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestMakeHandler_RejectsTrailingJSON(t *testing.T) {
+	handler := MakeHandler(calculator.Add)
+	req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewBufferString(`{"a": 2, "b": 3}{"a": 4, "b": 5}`))
+	rec := httptest.NewRecorder()
+
+	handler(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
+
+func TestMakeHandler_RejectsNonFiniteNumbers(t *testing.T) {
+	handler := MakeHandler(calculator.Add)
+	req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewBufferString(`{"a": 1e400, "b": 2}`))
+	rec := httptest.NewRecorder()
+
+	handler(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}

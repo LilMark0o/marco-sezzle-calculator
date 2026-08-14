@@ -9,6 +9,8 @@ Full-stack calculator: a Go REST API and a React + TypeScript frontend (shadcn/u
 
 A companion doc with architecture diagrams, request-flow diagrams, and the reasoning behind each design decision: [**Calculator Build Log**](https://claude.ai/code/artifact/8b35f5e4-763f-4ad4-9ff7-5ea428113308).
 
+Delivery records: [AI tooling and prompts](docs/ai-tooling-and-prompts.md) · [test evidence and coverage](docs/test-evidence.md).
+
 ## Setup
 
 **Backend** (Go 1.23+):
