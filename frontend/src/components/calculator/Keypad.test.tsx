@@ -13,6 +13,9 @@ describe("Keypad", () => {
 
     await userEvent.type(screen.getByLabelText("First operand"), "2");
     expect(onOperandChange).toHaveBeenCalledWith("a", "2");
+
+    await userEvent.type(screen.getByLabelText("Second operand"), "3");
+    expect(onOperandChange).toHaveBeenCalledWith("b", "3");
   });
 
   it("calls onCalculate with the operation when a button is clicked", async () => {

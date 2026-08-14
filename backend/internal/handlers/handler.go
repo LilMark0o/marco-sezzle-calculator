@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"calculator-backend/internal/httputil"
 )
@@ -34,15 +35,7 @@ func MakeHandler[T any](fn func(T) (float64, error)) http.HandlerFunc {
 		allowed := make(map[string]struct{}, typeOfRequest.NumField())
 		for i := 0; i < typeOfRequest.NumField(); i++ {
 			field := typeOfRequest.Field(i)
-			name := field.Tag.Get("json")
-			if comma := len(name); comma > 0 {
-				for j := 0; j < len(name); j++ {
-					if name[j] == ',' {
-						name = name[:j]
-						break
-					}
-				}
-			}
+			name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 			if name != "" && name != "-" {
 				allowed[name] = struct{}{}
 				if _, ok := raw[name]; !ok {
@@ -58,8 +51,8 @@ func MakeHandler[T any](fn func(T) (float64, error)) http.HandlerFunc {
 			}
 		}
 
-		encoded, err := json.Marshal(raw)
-		if err != nil || json.Unmarshal(encoded, &req) != nil {
+		encoded, _ := json.Marshal(raw)
+		if json.Unmarshal(encoded, &req) != nil {
 			httputil.WriteError(w, http.StatusBadRequest, "invalid request body")
 			return
 		}

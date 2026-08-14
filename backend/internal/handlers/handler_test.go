@@ -108,3 +108,25 @@ func TestMakeHandler_RejectsNonFiniteNumbers(t *testing.T) {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
 	}
 }
+
+func TestMakeHandler_RejectsNullAndArrayBodies(t *testing.T) {
+	for _, body := range []string{"null", "[]"} {
+		handler := MakeHandler(calculator.Add)
+		req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewBufferString(body))
+		rec := httptest.NewRecorder()
+		handler(rec, req)
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("body %s: status = %d, want %d", body, rec.Code, http.StatusBadRequest)
+		}
+	}
+}
+
+func TestMakeHandler_RejectsWrongFieldTypes(t *testing.T) {
+	handler := MakeHandler(calculator.Add)
+	req := httptest.NewRequest(http.MethodPost, "/api/add", bytes.NewBufferString(`{"a":"two","b":3}`))
+	rec := httptest.NewRecorder()
+	handler(rec, req)
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want %d", rec.Code, http.StatusBadRequest)
+	}
+}
